@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+}
+
+enum SaleStatus {
+  DRAFT
+  PENDING
+  PAID
+  CANCELED
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  document  String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  customers    Customer[]
+  products     Product[]
+  sales        Sale[]
+  transactions Transaction[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           Role     @default(OWNER)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("users")
+}
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  email          String?
+  phone          String?
+  document       String?
+  address        String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sales        Sale[]
+
+  @@index([organizationId])
+  @@map("customers")
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  price          Decimal     @db.Decimal(12, 2)
+  type           ProductType @default(PRODUCT)
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  saleItems    SaleItem[]
+
+  @@index([organizationId])
+  @@map("products")
+}
+
+model Sale {
+  id             String     @id @default(cuid())
+  organizationId String
+  customerId     String
+  number         Int
+  status         SaleStatus @default(DRAFT)
+  issueDate      DateTime   @default(now())
+  dueDate        DateTime?
+  total          Decimal    @default(0) @db.Decimal(12, 2)
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  items        SaleItem[]
+  transactions Transaction[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id          String  @id @default(cuid())
+  saleId      String
+  productId   String?
+  description String
+  quantity    Decimal @default(1) @db.Decimal(12, 2)
+  unitPrice   Decimal @db.Decimal(12, 2)
+  total       Decimal @db.Decimal(12, 2)
+
+  sale    Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Transaction {
+  id             String             @id @default(cuid())
+  organizationId String
+  type           TransactionType
+  category       String
+  description    String
+  amount         Decimal            @db.Decimal(12, 2)
+  dueDate        DateTime
+  paidAt         DateTime?
+  status         TransactionStatus  @default(PENDING)
+  relatedSaleId  String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  relatedSale  Sale?         @relation(fields: [relatedSaleId], references: [id])
+
+  @@index([organizationId])
+  @@map("transactions")
+}

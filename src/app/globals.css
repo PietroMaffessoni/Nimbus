@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 12%;
+
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 12%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 243 75% 96%;
+    --accent-foreground: 243 60% 32%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 35%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 40% 14%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 88%;
+    --ring: 243 75% 59%;
+
+    --sidebar: 240 25% 98%;
+    --sidebar-foreground: 240 10% 25%;
+    --sidebar-accent: 243 75% 95%;
+    --sidebar-border: 240 6% 90%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 6%;
+    --foreground: 240 5% 96%;
+
+    --card: 240 9% 9%;
+    --card-foreground: 240 5% 96%;
+
+    --popover: 240 9% 10%;
+    --popover-foreground: 240 5% 96%;
+
+    --primary: 243 80% 67%;
+    --primary-foreground: 240 10% 8%;
+
+    --secondary: 240 6% 14%;
+    --secondary-foreground: 240 5% 96%;
+
+    --muted: 240 6% 14%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 6% 16%;
+    --accent-foreground: 243 80% 82%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 30% 10%;
+
+    --border: 240 6% 18%;
+    --input: 240 6% 18%;
+    --ring: 243 80% 67%;
+
+    --sidebar: 240 10% 8%;
+    --sidebar-foreground: 240 5% 90%;
+    --sidebar-accent: 240 6% 16%;
+    --sidebar-border: 240 6% 16%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}
