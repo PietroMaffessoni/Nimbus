@@ -1,7 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -33,12 +33,7 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/dashboard/configuracoes">
-            <User className="mr-1 h-4 w-4" /> Meu perfil
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard/configuracoes">
-            <Settings className="mr-1 h-4 w-4" /> Configurações
+            <User className="mr-1 h-4 w-4" /> Meu usuário
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

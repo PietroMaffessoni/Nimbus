@@ -6,8 +6,8 @@ import {
   ReceiptText,
   Wallet,
   Sparkles,
-  Moon,
   ShieldCheck,
+  Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -109,19 +109,27 @@ export default function LandingPage() {
         <section className="container pb-24">
           <Card className="overflow-hidden">
             <CardContent className="flex flex-col items-center gap-6 p-10 text-center sm:p-16">
-              <div className="flex items-center gap-4 text-muted-foreground">
-                <Moon className="h-5 w-5" />
-                <span className="text-sm">Tema claro e escuro</span>
-                <span className="h-1 w-1 rounded-full bg-border" />
-                <ShieldCheck className="h-5 w-5" />
-                <span className="text-sm">Seus dados isolados por empresa</span>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="h-4 w-4" />
+                  Comece a usar em poucos minutos
+                </div>
+                <span className="hidden h-1 w-1 rounded-full bg-border sm:block" />
+                <div className="flex items-center gap-2 text-sm">
+                  <ShieldCheck className="h-4 w-4" />
+                  Seus dados protegidos e isolados por empresa
+                </div>
               </div>
               <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-                Experimente agora com dados de demonstração já populados
+                Pronto para simplificar a gestão do seu negócio?
               </h2>
+              <p className="max-w-md text-sm text-muted-foreground">
+                Organize clientes, vendas e financeiro em um só lugar, com uma experiência
+                que você vai gostar de usar todos os dias.
+              </p>
               <Button size="lg" asChild>
                 <Link href="/cadastro">
-                  Criar minha conta <ArrowRight className="h-4 w-4" />
+                  Criar minha conta grátis <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
             </CardContent>

@@ -17,7 +17,7 @@ export function KpiCard({
   const toneClasses: Record<string, string> = {
     default: "bg-primary/10 text-primary",
     success: "bg-success/10 text-success",
-    warning: "bg-warning/15 text-warning-foreground",
+    warning: "bg-warning/15 text-warning",
     destructive: "bg-destructive/10 text-destructive",
   };
 

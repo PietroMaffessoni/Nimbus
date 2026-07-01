@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "Nimbus — Gestão simples para o seu negócio",
   description: "O sistema de gestão mais simples e agradável para pequenas empresas.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
