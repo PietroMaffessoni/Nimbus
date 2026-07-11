@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, Plus, Search, Trash2, Users } from "lucide-react";
+import { History, MoreHorizontal, Pencil, Plus, Search, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Pagination } from "@/components/ui/pagination";
 import { CustomerForm } from "@/components/clientes/customer-form";
+import { CustomerSalesHistory } from "@/components/clientes/customer-sales-history";
 import { deleteCustomer } from "@/actions/customers";
+
+const PAGE_SIZE = 10;
 
 interface Customer {
   id: string;
@@ -32,10 +36,20 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
   const [editing, setEditing] = React.useState<Customer | null>(null);
   const [deleting, setDeleting] = React.useState<Customer | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [viewingHistory, setViewingHistory] = React.useState<Customer | null>(null);
+  const [page, setPage] = React.useState(1);
 
   const filtered = customers.filter((c) =>
     [c.name, c.email, c.phone, c.document].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase())
   );
+  const totalPages = Math.max(Math.ceil(filtered.length / PAGE_SIZE), 1);
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   function openNew() {
     setEditing(null);
@@ -68,7 +82,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Buscar cliente..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Buscar cliente..." className="pl-9" value={search} onChange={(e) => handleSearchChange(e.target.value)} />
         </div>
         <Button onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo cliente
@@ -99,7 +113,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((customer) => (
+            {paginated.map((customer) => (
               <TableRow key={customer.id}>
                 <TableCell className="font-medium">{customer.name}</TableCell>
                 <TableCell className="text-muted-foreground">
@@ -117,6 +131,9 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setViewingHistory(customer)}>
+                        <History className="mr-1 h-4 w-4" /> Histórico de vendas
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openEdit(customer)}>
                         <Pencil className="mr-1 h-4 w-4" /> Editar
                       </DropdownMenuItem>
@@ -134,6 +151,8 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
           </TableBody>
         </Table>
       )}
+
+      <Pagination page={currentPage} pageSize={PAGE_SIZE} totalItems={filtered.length} onPageChange={setPage} />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
@@ -172,6 +191,15 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
         loading={deleteLoading}
         onConfirm={handleDelete}
       />
+
+      {viewingHistory && (
+        <CustomerSalesHistory
+          customerId={viewingHistory.id}
+          customerName={viewingHistory.name}
+          open={!!viewingHistory}
+          onOpenChange={(open) => !open && setViewingHistory(null)}
+        />
+      )}
     </div>
   );
 }

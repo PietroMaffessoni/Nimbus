@@ -43,28 +43,60 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users        User[]
-  customers    Customer[]
-  products     Product[]
-  sales        Sale[]
-  transactions Transaction[]
+  users             User[]
+  customers         Customer[]
+  products          Product[]
+  sales             Sale[]
+  transactions      Transaction[]
+  financeCategories FinanceCategory[]
 
   @@map("organizations")
 }
 
 model User {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   name           String
-  email          String   @unique
+  email          String    @unique
   passwordHash   String
-  role           Role     @default(OWNER)
+  role           Role      @default(OWNER)
   organizationId String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  emailVerified  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization            Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
 }
 
 model Customer {
@@ -112,6 +144,7 @@ model Sale {
   status         SaleStatus @default(DRAFT)
   issueDate      DateTime   @default(now())
   dueDate        DateTime?
+  discount       Decimal    @default(0) @db.Decimal(12, 2)
   total          Decimal    @default(0) @db.Decimal(12, 2)
   notes          String?
   createdAt      DateTime   @default(now())
@@ -154,6 +187,7 @@ model Transaction {
   paidAt         DateTime?
   status         TransactionStatus  @default(PENDING)
   relatedSaleId  String?
+  recurringGroupId String?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -162,4 +196,18 @@ model Transaction {
 
   @@index([organizationId])
   @@map("transactions")
+}
+
+model FinanceCategory {
+  id             String          @id @default(cuid())
+  organizationId String
+  type           TransactionType
+  name           String
+  createdAt      DateTime        @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type, name])
+  @@index([organizationId])
+  @@map("finance_categories")
 }

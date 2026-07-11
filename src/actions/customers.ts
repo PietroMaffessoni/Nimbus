@@ -22,6 +22,14 @@ export async function getCustomer(id: string) {
   });
 }
 
+export async function getCustomerSales(customerId: string) {
+  const session = await requireSession();
+  return prisma.sale.findMany({
+    where: { customerId, organizationId: session.user.organizationId },
+    orderBy: { number: "desc" },
+  });
+}
+
 export async function createCustomer(input: CustomerInput): Promise<ActionResult> {
   const session = await requireSession();
   const parsed = customerSchema.safeParse(input);

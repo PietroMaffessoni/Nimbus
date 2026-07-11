@@ -5,7 +5,7 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 
 export function Sidebar({ organizationName }: { organizationName: string }) {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex print:hidden">
       <div className="flex h-16 items-center gap-2 px-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Sparkles className="h-4 w-4" />

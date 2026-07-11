@@ -1,12 +1,13 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { listTransactions } from "@/actions/finance";
+import { listCategories } from "@/actions/categories";
 import { TransactionsTable } from "@/components/financeiro/transactions-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function FinanceiroPage() {
-  const transactions = await listTransactions();
+  const [transactions, categories] = await Promise.all([listTransactions(), listCategories()]);
 
   const receivable = transactions
     .filter((t) => t.type === "INCOME" && t.status !== "PAID")
@@ -47,7 +48,7 @@ export default async function FinanceiroPage() {
         </Card>
       </div>
 
-      <TransactionsTable transactions={transactions} />
+      <TransactionsTable transactions={transactions} categories={categories} />
     </div>
   );
 }

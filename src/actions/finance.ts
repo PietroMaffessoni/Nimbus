@@ -1,11 +1,19 @@
 "use server";
 
+import { randomUUID } from "crypto";
+import { addDays, addMonths, addYears } from "date-fns";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { transactionSchema, type TransactionInput } from "@/lib/validations/transaction";
 import type { ActionResult } from "@/actions/auth";
+
+function nextOccurrenceDate(baseDate: Date, recurrence: TransactionInput["recurrence"], index: number) {
+  if (recurrence === "WEEKLY") return addDays(baseDate, 7 * index);
+  if (recurrence === "YEARLY") return addYears(baseDate, index);
+  return addMonths(baseDate, index);
+}
 
 export async function listTransactions() {
   const session = await requireSession();
@@ -24,17 +32,22 @@ export async function createTransaction(input: TransactionInput): Promise<Action
   }
 
   const data = parsed.data;
-  await prisma.transaction.create({
-    data: {
+  const baseDueDate = new Date(data.dueDate);
+  const occurrenceCount = data.recurrence === "NONE" ? 1 : data.occurrences;
+  const recurringGroupId = data.recurrence === "NONE" ? null : randomUUID();
+
+  await prisma.transaction.createMany({
+    data: Array.from({ length: occurrenceCount }, (_, index) => ({
       organizationId: session.user.organizationId,
       type: data.type,
       category: data.category,
       description: data.description,
       amount: data.amount,
-      dueDate: new Date(data.dueDate),
-      status: data.status,
-      paidAt: data.status === "PAID" ? new Date() : null,
-    },
+      dueDate: nextOccurrenceDate(baseDueDate, data.recurrence, index),
+      status: index === 0 ? data.status : ("PENDING" as const),
+      paidAt: index === 0 && data.status === "PAID" ? new Date() : null,
+      recurringGroupId,
+    })),
   });
 
   revalidatePath("/dashboard/financeiro");

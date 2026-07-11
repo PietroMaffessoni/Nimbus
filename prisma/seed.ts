@@ -33,6 +33,7 @@ async function main() {
       email: "demo@empresa.com",
       passwordHash,
       organizationId: organization.id,
+      emailVerified: new Date(),
     },
   });
 

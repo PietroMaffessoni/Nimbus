@@ -17,6 +17,9 @@ export function AppearanceForm() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
+  // Guard de hidratação: o tema real só existe no cliente, então evitamos marcar
+  // uma opção como selecionada no SSR antes do primeiro paint no client.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
   return (

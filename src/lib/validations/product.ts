@@ -5,7 +5,7 @@ export const productSchema = z.object({
   description: z.string().optional().or(z.literal("")),
   price: z.coerce.number().positive("O preço deve ser maior que zero"),
   type: z.enum(["PRODUCT", "SERVICE"]),
-  active: z.boolean().default(true),
+  active: z.boolean(),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

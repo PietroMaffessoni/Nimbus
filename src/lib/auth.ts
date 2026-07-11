@@ -43,17 +43,27 @@ export const authOptions: AuthOptions = {
           email: user.email,
           organizationId: user.organizationId,
           organizationName: user.organization.name,
+          emailVerified: !!user.emailVerified,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.organizationId = (user as { organizationId: string }).organizationId;
         token.organizationName = (user as { organizationName: string }).organizationName;
+        token.emailVerified = (user as { emailVerified: boolean }).emailVerified;
       }
+
+      if (trigger === "update" && token.id) {
+        const freshUser = await prisma.user.findUnique({ where: { id: token.id as string } });
+        if (freshUser) {
+          token.emailVerified = !!freshUser.emailVerified;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -61,6 +71,7 @@ export const authOptions: AuthOptions = {
         session.user.id = token.id as string;
         session.user.organizationId = token.organizationId as string;
         session.user.organizationName = token.organizationName as string;
+        session.user.emailVerified = token.emailVerified as boolean;
       }
       return session;
     },

@@ -13,9 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Pagination } from "@/components/ui/pagination";
 import { ProductForm } from "@/components/produtos/product-form";
 import { deleteProduct } from "@/actions/products";
 import { formatCurrency } from "@/lib/utils";
+
+const PAGE_SIZE = 10;
 
 interface Product {
   id: string;
@@ -33,8 +36,17 @@ export function ProductsTable({ products }: { products: Product[] }) {
   const [editing, setEditing] = React.useState<Product | null>(null);
   const [deleting, setDeleting] = React.useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [page, setPage] = React.useState(1);
 
   const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+  const totalPages = Math.max(Math.ceil(filtered.length / PAGE_SIZE), 1);
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   function openNew() {
     setEditing(null);
@@ -67,7 +79,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Buscar produto ou serviço..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input placeholder="Buscar produto ou serviço..." className="pl-9" value={search} onChange={(e) => handleSearchChange(e.target.value)} />
         </div>
         <Button onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo item
@@ -99,7 +111,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((product) => (
+            {paginated.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
                   <div className="font-medium">{product.name}</div>
@@ -134,6 +146,8 @@ export function ProductsTable({ products }: { products: Product[] }) {
           </TableBody>
         </Table>
       )}
+
+      <Pagination page={currentPage} pageSize={PAGE_SIZE} totalItems={filtered.length} onPageChange={setPage} />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>

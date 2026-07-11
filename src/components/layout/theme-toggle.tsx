@@ -10,6 +10,9 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
+  // Guard de hidratação: o tema real só existe no cliente, então evitamos renderizar
+  // o ícone errado no SSR antes do primeiro paint no client.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
   if (!mounted) {

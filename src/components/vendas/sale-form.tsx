@@ -58,6 +58,7 @@ export function SaleForm({
       dueDate: defaultValues?.dueDate ?? "",
       status: defaultValues?.status ?? "DRAFT",
       notes: defaultValues?.notes ?? "",
+      discount: defaultValues?.discount ?? 0,
       items: defaultValues?.items?.length
         ? defaultValues.items
         : [{ productId: "", description: "", quantity: 1, unitPrice: 0 }],
@@ -66,7 +67,9 @@ export function SaleForm({
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
   const items = watch("items");
-  const total = items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
+  const discount = Number(watch("discount")) || 0;
+  const itemsTotal = items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
+  const total = Math.max(itemsTotal - discount, 0);
 
   function handleProductSelect(index: number, productId: string) {
     const product = products.find((p) => p.id === productId);
@@ -150,6 +153,11 @@ export function SaleForm({
             <Label htmlFor="dueDate">Vencimento</Label>
             <Input id="dueDate" type="date" {...register("dueDate")} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="discount">Desconto (R$)</Label>
+            <Input id="discount" type="number" step="0.01" min="0" {...register("discount")} />
+            {errors.discount && <p className="text-xs text-destructive">{errors.discount.message}</p>}
+          </div>
           <div className="space-y-2 sm:col-span-2 lg:col-span-4">
             <Label htmlFor="notes">Observações</Label>
             <Textarea id="notes" placeholder="Observações sobre a venda" {...register("notes")} />
@@ -220,7 +228,17 @@ export function SaleForm({
       </Card>
 
       <div className={cn("flex flex-col items-end gap-4 rounded-2xl border border-border bg-card p-5 shadow-soft sm:flex-row sm:items-center sm:justify-between")}>
-        <div>
+        <div className="space-y-1 text-right">
+          {discount > 0 && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Subtotal <span className="ml-2 text-foreground">{formatCurrency(itemsTotal)}</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Desconto <span className="ml-2 text-foreground">-{formatCurrency(discount)}</span>
+              </p>
+            </>
+          )}
           <p className="text-xs text-muted-foreground">Total da venda</p>
           <p className="text-2xl font-semibold">{formatCurrency(total)}</p>
         </div>

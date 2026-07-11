@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 
-const saleStatusMap = {
+export const saleStatusMap = {
   DRAFT: { label: "Rascunho", variant: "secondary" as const },
   PENDING: { label: "Pendente", variant: "warning" as const },
   PAID: { label: "Paga", variant: "success" as const },

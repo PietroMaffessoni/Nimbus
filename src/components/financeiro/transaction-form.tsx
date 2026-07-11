@@ -15,10 +15,19 @@ import { transactionSchema, type TransactionInput } from "@/lib/validations/tran
 import { createTransaction } from "@/actions/finance";
 import { formatDateForInput } from "@/lib/utils";
 
-const incomeCategories = ["Vendas", "Serviços", "Outras Receitas"];
-const expenseCategories = ["Aluguel", "Fornecedores", "Marketing", "Utilidades", "Folha de Pagamento", "Outras Despesas"];
+interface Category {
+  id: string;
+  type: "INCOME" | "EXPENSE";
+  name: string;
+}
 
-export function TransactionForm({ onSuccess }: { onSuccess: () => void }) {
+export function TransactionForm({
+  categories,
+  onSuccess,
+}: {
+  categories: Category[];
+  onSuccess: () => void;
+}) {
   const [loading, setLoading] = React.useState(false);
 
   const {
@@ -36,11 +45,14 @@ export function TransactionForm({ onSuccess }: { onSuccess: () => void }) {
       amount: 0,
       dueDate: formatDateForInput(new Date()),
       status: "PENDING",
+      recurrence: "NONE",
+      occurrences: 12,
     },
   });
 
   const type = watch("type");
-  const categories = type === "INCOME" ? incomeCategories : expenseCategories;
+  const recurrence = watch("recurrence");
+  const availableCategories = categories.filter((c) => c.type === type);
 
   async function onSubmit(values: TransactionInput) {
     setLoading(true);
@@ -88,9 +100,9 @@ export function TransactionForm({ onSuccess }: { onSuccess: () => void }) {
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                  {availableCategories.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -113,7 +125,7 @@ export function TransactionForm({ onSuccess }: { onSuccess: () => void }) {
           <Label htmlFor="dueDate">Vencimento</Label>
           <Input id="dueDate" type="date" {...register("dueDate")} />
         </div>
-        <div className="space-y-2 sm:col-span-2">
+        <div className="space-y-2">
           <Label>Status</Label>
           <Controller
             control={control}
@@ -131,6 +143,36 @@ export function TransactionForm({ onSuccess }: { onSuccess: () => void }) {
             )}
           />
         </div>
+        <div className="space-y-2">
+          <Label>Repetir</Label>
+          <Controller
+            control={control}
+            name="recurrence"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">Não repetir</SelectItem>
+                  <SelectItem value="WEEKLY">Semanalmente</SelectItem>
+                  <SelectItem value="MONTHLY">Mensalmente</SelectItem>
+                  <SelectItem value="YEARLY">Anualmente</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+        {recurrence !== "NONE" && (
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="occurrences">Quantas vezes repetir</Label>
+            <Input id="occurrences" type="number" step="1" min="1" max="60" {...register("occurrences")} />
+            {errors.occurrences && <p className="text-xs text-destructive">{errors.occurrences.message}</p>}
+            <p className="text-xs text-muted-foreground">
+              Serão criados {`${watch("occurrences") || 0}`} lançamentos, um para cada período.
+            </p>
+          </div>
+        )}
       </div>
       <DialogFooter>
         <Button type="submit" disabled={loading}>

@@ -21,7 +21,7 @@ export async function getSale(id: string) {
   const session = await requireSession();
   return prisma.sale.findFirst({
     where: { id, organizationId: session.user.organizationId },
-    include: { customer: true, items: { include: { product: true } } },
+    include: { customer: true, organization: true, items: { include: { product: true } } },
   });
 }
 
@@ -102,7 +102,7 @@ export async function createSale(input: SaleInput): Promise<ActionResult & { id?
     return { success: false, error: "Cliente inválido." };
   }
 
-  const total = calculateItemsTotal(data.items);
+  const total = calculateItemsTotal(data.items) - data.discount;
   const dueDate = data.dueDate ? new Date(data.dueDate) : new Date(data.issueDate);
 
   const saleId = await prisma.$transaction(async (tx) => {
@@ -122,6 +122,7 @@ export async function createSale(input: SaleInput): Promise<ActionResult & { id?
         issueDate: new Date(data.issueDate),
         dueDate,
         notes: data.notes || null,
+        discount: data.discount,
         total,
         items: {
           create: data.items.map((item) => ({
@@ -170,7 +171,7 @@ export async function updateSale(id: string, input: SaleInput): Promise<ActionRe
     return { success: false, error: "Cliente inválido." };
   }
 
-  const total = calculateItemsTotal(data.items);
+  const total = calculateItemsTotal(data.items) - data.discount;
   const dueDate = data.dueDate ? new Date(data.dueDate) : new Date(data.issueDate);
 
   await prisma.$transaction(async (tx) => {
@@ -183,6 +184,7 @@ export async function updateSale(id: string, input: SaleInput): Promise<ActionRe
         issueDate: new Date(data.issueDate),
         dueDate,
         notes: data.notes || null,
+        discount: data.discount,
         total,
         items: {
           create: data.items.map((item) => ({
@@ -231,6 +233,53 @@ export async function markSaleAsPaid(id: string): Promise<ActionResult> {
   revalidatePath("/dashboard/financeiro");
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+export async function duplicateSale(id: string): Promise<ActionResult & { id?: string }> {
+  const session = await requireSession();
+  const existing = await prisma.sale.findFirst({
+    where: { id, organizationId: session.user.organizationId },
+    include: { items: true },
+  });
+  if (!existing) {
+    return { success: false, error: "Venda não encontrada." };
+  }
+
+  const newSaleId = await prisma.$transaction(async (tx) => {
+    const last = await tx.sale.findFirst({
+      where: { organizationId: session.user.organizationId },
+      orderBy: { number: "desc" },
+      select: { number: true },
+    });
+    const number = (last?.number ?? 0) + 1;
+
+    const sale = await tx.sale.create({
+      data: {
+        organizationId: session.user.organizationId,
+        customerId: existing.customerId,
+        number,
+        status: "DRAFT",
+        issueDate: new Date(),
+        discount: existing.discount,
+        total: existing.total,
+        notes: existing.notes,
+        items: {
+          create: existing.items.map((item) => ({
+            productId: item.productId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+          })),
+        },
+      },
+    });
+
+    return sale.id;
+  });
+
+  revalidatePath("/dashboard/vendas");
+  return { success: true, id: newSaleId };
 }
 
 export async function deleteSale(id: string): Promise<ActionResult> {
